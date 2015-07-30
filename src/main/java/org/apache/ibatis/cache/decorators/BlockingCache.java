@@ -34,13 +34,13 @@ import org.apache.ibatis.cache.CacheException;
  * @author Eduardo Macarron
  *
  */
-public class BlockingCache implements Cache {
+public class BlockingCache implements Cache { // 阻塞缓存，线程读某个key的缓存时若未找到则阻塞，直到这个key被加入
 
   private long timeout;
   private final Cache delegate;
-  private final ConcurrentHashMap<Object, ReentrantLock> locks;
+  private final ConcurrentHashMap<Object, ReentrantLock> locks; // 给每个key保持一个锁
 
-  public BlockingCache(Cache delegate) {
+  public BlockingCache(Cache delegate) { // 构造器，装饰一个我们的缓存delegate
     this.delegate = delegate;
     this.locks = new ConcurrentHashMap<Object, ReentrantLock>();
   }
@@ -60,22 +60,22 @@ public class BlockingCache implements Cache {
     try {
       delegate.putObject(key, value);
     } finally {
-      releaseLock(key);
+      releaseLock(key); // 总之不管添加成功没，都要释放锁
     }
   }
 
   @Override
   public Object getObject(Object key) {
-    acquireLock(key);
+    acquireLock(key); // 获得锁，若没这个key则会阻塞
     Object value = delegate.getObject(key);
-    if (value != null) {
+    if (value != null) { // value存在则释放锁，否则不释放锁
       releaseLock(key);
     }        
     return value;
   }
 
   @Override
-  public Object removeObject(Object key) {
+  public Object removeObject(Object key) { // hama
     // despite of its name, this method is called only to release locks
     releaseLock(key);
     return null;
@@ -91,32 +91,32 @@ public class BlockingCache implements Cache {
     return null;
   }
   
-  private ReentrantLock getLockForKey(Object key) {
+  private ReentrantLock getLockForKey(Object key) { // 获得key的锁
     ReentrantLock lock = new ReentrantLock();
     ReentrantLock previous = locks.putIfAbsent(key, lock);
     return previous == null ? lock : previous;
   }
   
-  private void acquireLock(Object key) {
+  private void acquireLock(Object key) { // 获取锁
     Lock lock = getLockForKey(key);
     if (timeout > 0) {
       try {
-        boolean acquired = lock.tryLock(timeout, TimeUnit.MILLISECONDS);
-        if (!acquired) {
+        boolean acquired = lock.tryLock(timeout, TimeUnit.MILLISECONDS); // 限时获取锁
+        if (!acquired) { // 时限内未得到锁则报异常
           throw new CacheException("Couldn't get a lock in " + timeout + " for the key " +  key + " at the cache " + delegate.getId());  
         }
       } catch (InterruptedException e) {
         throw new CacheException("Got interrupted while trying to acquire lock for key " + key, e);
       }
     } else {
-      lock.lock();
+      lock.lock(); // 立即加锁，即获取锁
     }
   }
   
-  private void releaseLock(Object key) {
-    ReentrantLock lock = locks.get(key);
-    if (lock.isHeldByCurrentThread()) {
-      lock.unlock();
+  private void releaseLock(Object key) { // 释放锁
+    ReentrantLock lock = locks.get(key); // 从HashMap获得锁
+    if (lock.isHeldByCurrentThread()) { // 若是本线程的锁
+      lock.unlock(); // 解锁
     }
   }
 
