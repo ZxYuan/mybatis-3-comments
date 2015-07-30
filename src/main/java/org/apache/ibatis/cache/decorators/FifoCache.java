@@ -26,10 +26,10 @@ import org.apache.ibatis.cache.Cache;
  *
  * @author Clinton Begin
  */
-public class FifoCache implements Cache {
+public class FifoCache implements Cache { // 先进先出的缓存装饰器
 
   private final Cache delegate;
-  private Deque<Object> keyList;
+  private Deque<Object> keyList; // 双端队列，存key
   private int size;
 
   public FifoCache(Cache delegate) {
@@ -53,9 +53,9 @@ public class FifoCache implements Cache {
   }
 
   @Override
-  public void putObject(Object key, Object value) {
-    cycleKeyList(key);
-    delegate.putObject(key, value);
+  public void putObject(Object key, Object value) { // 加入缓存项前先cycleKeyList
+    cycleKeyList(key); // 循环检查，先把key加到队尾，看有没有超过size，超过了就对队头的key做出队操作
+    delegate.putObject(key, value); // 加入缓存项
   }
 
   @Override
@@ -71,7 +71,7 @@ public class FifoCache implements Cache {
   @Override
   public void clear() {
     delegate.clear();
-    keyList.clear();
+    keyList.clear(); // 队列也要清空
   }
 
   @Override
@@ -79,11 +79,11 @@ public class FifoCache implements Cache {
     return null;
   }
 
-  private void cycleKeyList(Object key) {
-    keyList.addLast(key);
-    if (keyList.size() > size) {
-      Object oldestKey = keyList.removeFirst();
-      delegate.removeObject(oldestKey);
+  private void cycleKeyList(Object key) { // 循环检查
+    keyList.addLast(key); // 加入队尾
+    if (keyList.size() > size) { // 太多了？
+      Object oldestKey = keyList.removeFirst(); // 队头出队
+      delegate.removeObject(oldestKey); // 缓存中删除该项
     }
   }
 
