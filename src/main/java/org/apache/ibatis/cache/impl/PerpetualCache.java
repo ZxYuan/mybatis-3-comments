@@ -25,11 +25,11 @@ import org.apache.ibatis.cache.CacheException;
 /**
  * @author Clinton Begin
  */
-public class PerpetualCache implements Cache {
+public class PerpetualCache implements Cache { // 默认cache实现
 
-  private String id;
+  private String id; // Cache的唯一标识
 
-  private Map<Object, Object> cache = new HashMap<Object, Object>();
+  private Map<Object, Object> cache = new HashMap<Object, Object>(); // 缓存的键值对内容, key一般是CacheKey
 
   public PerpetualCache(String id) {
     this.id = id;
@@ -66,13 +66,13 @@ public class PerpetualCache implements Cache {
   }
 
   @Override
-  public ReadWriteLock getReadWriteLock() {
+  public ReadWriteLock getReadWriteLock() { // 并不需要读写锁
     return null;
   }
 
   @Override
   public boolean equals(Object o) {
-    if (getId() == null) {
+    if (getId() == null) { // 必须要id
       throw new CacheException("Cache instances require an ID.");
     }
     if (this == o) {
@@ -83,7 +83,7 @@ public class PerpetualCache implements Cache {
     }
 
     Cache otherCache = (Cache) o;
-    return getId().equals(otherCache.getId());
+    return getId().equals(otherCache.getId()); // id相等则相等
   }
 
   @Override
@@ -91,7 +91,7 @@ public class PerpetualCache implements Cache {
     if (getId() == null) {
       throw new CacheException("Cache instances require an ID.");
     }
-    return getId().hashCode();
+    return getId().hashCode(); // id的hashcode
   }
 
 }
