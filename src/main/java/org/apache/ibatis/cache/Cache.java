@@ -39,24 +39,24 @@ import java.util.concurrent.locks.ReadWriteLock;
  * @author Clinton Begin
  */
 
-public interface Cache {
+public interface Cache { // 缓存的服务提供接口(SPI)，默认实现为PerpetualCache类，构造函数需要一个final String id参数(namespace)
 
   /**
    * @return The identifier of this cache
    */
-  String getId();
+  String getId(); // 获得缓存的id
 
   /**
    * @param key Can be any object but usually it is a {@link CacheKey}
    * @param value The result of a select.
    */
-  void putObject(Object key, Object value);
+  void putObject(Object key, Object value); // key一般是CacheKey，value是一次select查询的结果
 
   /**
    * @param key The key
    * @return The object stored in the cache.
    */
-  Object getObject(Object key);
+  Object getObject(Object key); // 返回指定key的value(以前的查询结果)
 
   /**
    * As of 3.3.0 this method is only called during a rollback 
@@ -72,19 +72,19 @@ public interface Cache {
    * @param key The key
    * @return Not used
    */
-  Object removeObject(Object key);
+  Object removeObject(Object key); // 从缓存移除 hama
 
   /**
    * Clears this cache instance
    */  
-  void clear();
+  void clear(); // 清除本缓存实例
 
   /**
    * Optional. This method is not called by the core.
    * 
    * @return The number of elements stored in the cache (not its capacity).
    */
-  int getSize();
+  int getSize(); // 返回本缓存中的元素数量
   
   /** 
    * Optional. As of 3.2.6 this method is no longer called by the core.
@@ -93,6 +93,6 @@ public interface Cache {
    * 
    * @return A ReadWriteLock 
    */
-  ReadWriteLock getReadWriteLock();
+  ReadWriteLock getReadWriteLock(); // 获得读写锁，3.2.6后不用了，加锁应该由实现类内部自己提供 hama
 
 }
