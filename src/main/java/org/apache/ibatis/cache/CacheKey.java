@@ -23,59 +23,59 @@ import java.util.List;
 /**
  * @author Clinton Begin
  */
-public class CacheKey implements Cloneable, Serializable {
+public class CacheKey implements Cloneable, Serializable { // 缓存键值对的键，构建CacheKey参考BaseExecutor.createCacheKey方法
 
   private static final long serialVersionUID = 1146682552656046210L;
 
-  public static final CacheKey NULL_CACHE_KEY = new NullCacheKey();
+  public static final CacheKey NULL_CACHE_KEY = new NullCacheKey(); // 表示一个没用的key单例 hama
 
   private static final int DEFAULT_MULTIPLYER = 37;
   private static final int DEFAULT_HASHCODE = 17;
 
-  private int multiplier;
-  private int hashcode;
-  private long checksum;
-  private int count;
-  private List<Object> updateList;
+  private int multiplier; // 默认就是DEFAULT_MULTIPLYER=37，也不变了
+  private int hashcode; // hashcode，初始是17，计算看doUpdate方法
+  private long checksum; // 校验和，计算看doUpdate方法
+  private int count; // 「查询特征」的数量，应该与updateList.size()一致吧？ hama
+  private List<Object> updateList; // 存「查询特征」，如statementId, rowBounds, 传递给JDBC的SQL, 传递给JDBC的参数值
 
-  public CacheKey() {
+  public CacheKey() { // 构造，初始化
     this.hashcode = DEFAULT_HASHCODE;
     this.multiplier = DEFAULT_MULTIPLYER;
     this.count = 0;
     this.updateList = new ArrayList<Object>();
   }
 
-  public CacheKey(Object[] objects) {
-    this();
-    updateAll(objects);
+  public CacheKey(Object[] objects) { // 用一个Object数组构造
+    this(); // 初始化
+    updateAll(objects); //加入objects的所有元素到updateList
   }
 
   public int getUpdateCount() {
     return updateList.size();
   }
 
-  public void update(Object object) {
-    if (object != null && object.getClass().isArray()) {
+  public void update(Object object) { // 加入一个「查询特征」，存到updateList里
+    if (object != null && object.getClass().isArray()) { // 若object是数组则doUpdate(每一个元素)
       int length = Array.getLength(object);
       for (int i = 0; i < length; i++) {
         Object element = Array.get(object, i);
         doUpdate(element);
       }
-    } else {
+    } else { // 若object不是数组
       doUpdate(object);
     }
   }
 
-  private void doUpdate(Object object) {
-    int baseHashCode = object == null ? 1 : object.hashCode();
+  private void doUpdate(Object object) { // 加入一个「查询特征」的核心操作
+    int baseHashCode = object == null ? 1 : object.hashCode(); // 空特征的baseHashCode是1
 
-    count++;
-    checksum += baseHashCode;
-    baseHashCode *= count;
+    count++; // 计数器，有几个特征
+    checksum += baseHashCode; // 累加baseHashCode计算校验和
+    baseHashCode *= count; // baseHashCode扩大count倍
 
-    hashcode = multiplier * hashcode + baseHashCode;
+    hashcode = multiplier * hashcode + baseHashCode; // 更新hashcode=默认乘子(37)*默认hashcode(17)+baseHashCode
 
-    updateList.add(object);
+    updateList.add(object); // 加入updateList
   }
 
   public void updateAll(Object[] objects) {
@@ -85,7 +85,7 @@ public class CacheKey implements Cloneable, Serializable {
   }
 
   @Override
-  public boolean equals(Object object) {
+  public boolean equals(Object object) { // 缓存判断命中时要用，hashcode checksum count均要相等 且 updateList每个元素equals
     if (this == object) {
       return true;
     }
@@ -105,7 +105,7 @@ public class CacheKey implements Cloneable, Serializable {
       return false;
     }
 
-    for (int i = 0; i < updateList.size(); i++) {
+    for (int i = 0; i < updateList.size(); i++) { // updateList每个元素equals
       Object thisObject = updateList.get(i);
       Object thatObject = cacheKey.updateList.get(i);
       if (thisObject == null) {
@@ -139,7 +139,7 @@ public class CacheKey implements Cloneable, Serializable {
   @Override
   public CacheKey clone() throws CloneNotSupportedException {
     CacheKey clonedCacheKey = (CacheKey) super.clone();
-    clonedCacheKey.updateList = new ArrayList<Object>(updateList);
+    clonedCacheKey.updateList = new ArrayList<Object>(updateList); // 复制的CacheKey的updateList用新的引用
     return clonedCacheKey;
   }
 
