@@ -22,10 +22,10 @@ import org.apache.ibatis.cache.Cache;
 /**
  * @author Clinton Begin
  */
-public class ScheduledCache implements Cache {
+public class ScheduledCache implements Cache { // 每隔clearInterval清空一次缓存
 
-  private Cache delegate;
-  protected long clearInterval;
+  private Cache delegate;　// 被装饰的cache
+  protected long clearInterval; // 清空缓存的间隔时间
   protected long lastClear;
 
   public ScheduledCache(Cache delegate) {
@@ -45,30 +45,30 @@ public class ScheduledCache implements Cache {
 
   @Override
   public int getSize() {
-    clearWhenStale();
+    clearWhenStale(); // 检验是否缓存过期
     return delegate.getSize();
   }
 
   @Override
   public void putObject(Object key, Object object) {
-    clearWhenStale();
+    clearWhenStale(); // 检验是否缓存过期
     delegate.putObject(key, object);
   }
 
   @Override
   public Object getObject(Object key) {
-    return clearWhenStale() ? null : delegate.getObject(key);
+    return clearWhenStale() ? null : delegate.getObject(key); // 检验是否缓存过期
   }
 
   @Override
   public Object removeObject(Object key) {
-    clearWhenStale();
+    clearWhenStale(); // 检验是否缓存过期
     return delegate.removeObject(key);
   }
 
   @Override
-  public void clear() {
-    lastClear = System.currentTimeMillis();
+  public void clear() { // 清空缓存
+    lastClear = System.currentTimeMillis(); // 设置本次清空的时间点
     delegate.clear();
   }
 
@@ -87,9 +87,9 @@ public class ScheduledCache implements Cache {
     return delegate.equals(obj);
   }
 
-  private boolean clearWhenStale() {
-    if (System.currentTimeMillis() - lastClear > clearInterval) {
-      clear();
+  private boolean clearWhenStale() { // 过期时清空缓存
+    if (System.currentTimeMillis() - lastClear > clearInterval) { // 距离上次清空间隔大于clearInterval
+      clear(); // 清空本缓存
       return true;
     }
     return false;
