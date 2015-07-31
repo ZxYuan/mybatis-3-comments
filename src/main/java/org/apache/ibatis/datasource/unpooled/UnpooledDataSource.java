@@ -37,19 +37,19 @@ import org.apache.ibatis.io.Resources;
  */
 public class UnpooledDataSource implements DataSource {
   
-  private ClassLoader driverClassLoader;
+  private ClassLoader driverClassLoader; // 驱动的类加载器
   private Properties driverProperties;
-  private static Map<String, Driver> registeredDrivers = new ConcurrentHashMap<String, Driver>();
+  private static Map<String, Driver> registeredDrivers = new ConcurrentHashMap<String, Driver>(); // <驱动名, 加载的驱动>
 
   private String driver;
   private String url;
   private String username;
   private String password;
 
-  private Boolean autoCommit;
-  private Integer defaultTransactionIsolationLevel;
+  private Boolean autoCommit; // 标记是否自动提交
+  private Integer defaultTransactionIsolationLevel; // 默认的事务隔离级别
 
-  static {
+  static { // 取出所有已加载的JDBC驱动，并放入registeredDrivers这个concurrentHashMap
     Enumeration<Driver> drivers = DriverManager.getDrivers();
     while (drivers.hasMoreElements()) {
       Driver driver = drivers.nextElement();
@@ -100,7 +100,7 @@ public class UnpooledDataSource implements DataSource {
 
   @Override
   public void setLoginTimeout(int loginTimeout) throws SQLException {
-    DriverManager.setLoginTimeout(loginTimeout);
+    DriverManager.setLoginTimeout(loginTimeout); // 设置驱动最多可以等待的 尝试连接数据库花费的秒数
   }
 
   @Override
@@ -110,7 +110,7 @@ public class UnpooledDataSource implements DataSource {
 
   @Override
   public void setLogWriter(PrintWriter logWriter) throws SQLException {
-    DriverManager.setLogWriter(logWriter);
+    DriverManager.setLogWriter(logWriter); // 设置写log的PrintWriter
   }
 
   @Override
@@ -196,34 +196,34 @@ public class UnpooledDataSource implements DataSource {
     return doGetConnection(props);
   }
 
-  private Connection doGetConnection(Properties properties) throws SQLException {
-    initializeDriver();
-    Connection connection = DriverManager.getConnection(url, properties);
-    configureConnection(connection);
+  private Connection doGetConnection(Properties properties) throws SQLException { // 连接数据库
+    initializeDriver(); // 初始化驱动
+    Connection connection = DriverManager.getConnection(url, properties); // 获得连接
+    configureConnection(connection); // 配置连接
     return connection;
   }
 
-  private synchronized void initializeDriver() throws SQLException {
-    if (!registeredDrivers.containsKey(driver)) {
+  private synchronized void initializeDriver() throws SQLException { // 初始化驱动
+    if (!registeredDrivers.containsKey(driver)) { // 若当前已注册的驱动中不存在driver驱动
       Class<?> driverType;
       try {
-        if (driverClassLoader != null) {
-          driverType = Class.forName(driver, true, driverClassLoader);
-        } else {
-          driverType = Resources.classForName(driver);
+        if (driverClassLoader != null) { // 类加载器非空
+          driverType = Class.forName(driver, true, driverClassLoader); // 由driverClassLoader加载驱动类
+        } else { // 类加载器空
+          driverType = Resources.classForName(driver); // load这个driver类，用的啥类加载器？ hama
         }
-        // DriverManager requires the driver to be loaded via the system ClassLoader.
+        // DriverManager requires the driver to be loaded via the system ClassLoader. // hama
         // http://www.kfu.com/~nsayer/Java/dyn-jdbc.html
-        Driver driverInstance = (Driver)driverType.newInstance();
-        DriverManager.registerDriver(new DriverProxy(driverInstance));
-        registeredDrivers.put(driver, driverInstance);
+        Driver driverInstance = (Driver)driverType.newInstance(); // 驱动类产生新的实例
+        DriverManager.registerDriver(new DriverProxy(driverInstance)); // 注册驱动到DriverManager
+        registeredDrivers.put(driver, driverInstance); // 把<驱动名, 驱动实例>加入到registeredDrivers
       } catch (Exception e) {
         throw new SQLException("Error setting driver on UnpooledDataSource. Cause: " + e);
       }
     }
   }
 
-  private void configureConnection(Connection conn) throws SQLException {
+  private void configureConnection(Connection conn) throws SQLException { // 设定自动提交和隔离级别
     if (autoCommit != null && autoCommit != conn.getAutoCommit()) {
       conn.setAutoCommit(autoCommit);
     }
@@ -232,7 +232,7 @@ public class UnpooledDataSource implements DataSource {
     }
   }
 
-  private static class DriverProxy implements Driver {
+  private static class DriverProxy implements Driver { // 什么模式？作用是啥 hama
     private Driver driver;
 
     DriverProxy(Driver d) {
@@ -276,17 +276,17 @@ public class UnpooledDataSource implements DataSource {
   }
 
   @Override
-  public <T> T unwrap(Class<T> iface) throws SQLException {
+  public <T> T unwrap(Class<T> iface) throws SQLException { // hama
     throw new SQLException(getClass().getName() + " is not a wrapper.");
   }
 
   @Override
-  public boolean isWrapperFor(Class<?> iface) throws SQLException {
+  public boolean isWrapperFor(Class<?> iface) throws SQLException { // hama
     return false;
   }
 
   // @Override only valid jdk7+
-  public Logger getParentLogger() {
+  public Logger getParentLogger() { // hama
     // requires JDK version 1.6
     return Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
   }
