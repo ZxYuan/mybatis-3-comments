@@ -36,7 +36,7 @@ import org.apache.ibatis.logging.LogFactory;
  * @author Clinton Begin
  * @author Eduardo Macarron
  */
-public class TransactionalCache implements Cache {
+public class TransactionalCache implements Cache { // 并没有看懂 hama
 
   private static final Log log = LogFactory.getLog(TransactionalCache.class);
 
@@ -67,10 +67,10 @@ public class TransactionalCache implements Cache {
     // issue #116
     Object object = delegate.getObject(key);
     if (object == null) {
-      entriesMissedInCache.add(key);
+      entriesMissedInCache.add(key); // 往entriesMissedInCache加入未命中的key
     }
-    // issue #146
-    if (clearOnCommit) {
+    // issue #146 
+    if (clearOnCommit) { // hama
       return null;
     } else {
       return object;
@@ -83,23 +83,23 @@ public class TransactionalCache implements Cache {
   }
 
   @Override
-  public void putObject(Object key, Object object) {
-    entriesToAddOnCommit.put(key, object);
+  public void putObject(Object key, Object object) { // 加一个新的缓存项
+    entriesToAddOnCommit.put(key, object); // 还没有加入缓存，只是加到entriesToAddOnCommit里
   }
 
   @Override
-  public Object removeObject(Object key) {
+  public Object removeObject(Object key) { // hama
     return null;
   }
 
   @Override
-  public void clear() {
-    clearOnCommit = true;
-    entriesToAddOnCommit.clear();
+  public void clear() { // 清空缓存
+    clearOnCommit = true; // hama
+    entriesToAddOnCommit.clear(); // 清空entriesToAddOnCommit
   }
 
-  public void commit() {
-    if (clearOnCommit) {
+  public void commit() { // 事务提交
+    if (clearOnCommit) { // 提交时是否清空缓存
       delegate.clear();
     }
     flushPendingEntries();
@@ -118,10 +118,10 @@ public class TransactionalCache implements Cache {
   }
 
   private void flushPendingEntries() {
-    for (Map.Entry<Object, Object> entry : entriesToAddOnCommit.entrySet()) {
+    for (Map.Entry<Object, Object> entry : entriesToAddOnCommit.entrySet()) { // 待加入缓存的项都加入缓存
       delegate.putObject(entry.getKey(), entry.getValue());
     }
-    for (Object entry : entriesMissedInCache) {
+    for (Object entry : entriesMissedInCache) { // 之前未命中的项都加入缓存 hama
       if (!entriesToAddOnCommit.containsKey(entry)) {
         delegate.putObject(entry, null);
       }
