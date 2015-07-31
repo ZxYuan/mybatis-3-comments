@@ -29,7 +29,7 @@ import org.apache.ibatis.cache.Cache;
  * 
  * @author Clinton Begin
  */
-public class WeakCache implements Cache {
+public class WeakCache implements Cache { // 弱引用的装饰类，可以参考软引用的装饰类，几乎相同
   private final Deque<Object> hardLinksToAvoidGarbageCollection;
   private final ReferenceQueue<Object> queueOfGarbageCollectedEntries;
   private final Cache delegate;
