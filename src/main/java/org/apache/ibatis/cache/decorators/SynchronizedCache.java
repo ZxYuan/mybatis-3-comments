@@ -22,7 +22,7 @@ import org.apache.ibatis.cache.Cache;
 /**
  * @author Clinton Begin
  */
-public class SynchronizedCache implements Cache {
+public class SynchronizedCache implements Cache { // get*/put*/clear加个锁
 
   private Cache delegate;
   
