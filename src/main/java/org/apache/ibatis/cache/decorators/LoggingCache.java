@@ -24,16 +24,16 @@ import org.apache.ibatis.logging.LogFactory;
 /**
  * @author Clinton Begin
  */
-public class LoggingCache implements Cache {
+public class LoggingCache implements Cache { // 自带日志的Cache装饰类，这里日志纪录了缓存命中率
 
-  private Log log;  
-  private Cache delegate;
+  private Log log;  // 日志，详见org.apache.ibatis.logging.Log
+  private Cache delegate; // 被装饰的Cache
   protected int requests = 0;
   protected int hits = 0;
 
   public LoggingCache(Cache delegate) {
     this.delegate = delegate;
-    this.log = LogFactory.getLog(getId());
+    this.log = LogFactory.getLog(getId()); // 工厂根据被装饰Cache的id产生一个日志
   }
 
   @Override
@@ -47,19 +47,19 @@ public class LoggingCache implements Cache {
   }
 
   @Override
-  public void putObject(Object key, Object object) {
+  public void putObject(Object key, Object object) { // 这里并没有纪录日志
     delegate.putObject(key, object);
   }
 
   @Override
-  public Object getObject(Object key) {
-    requests++;
+  public Object getObject(Object key) { // 获取缓存数据，纪录日志
+    requests++; // 请求缓存计数
     final Object value = delegate.getObject(key);
     if (value != null) {
-      hits++;
+      hits++; // 缓存命中
     }
     if (log.isDebugEnabled()) {
-      log.debug("Cache Hit Ratio [" + getId() + "]: " + getHitRatio());
+      log.debug("Cache Hit Ratio [" + getId() + "]: " + getHitRatio()); // 纪录当前命中率
     }
     return value;
   }
@@ -89,7 +89,7 @@ public class LoggingCache implements Cache {
     return delegate.equals(obj);
   }
 
-  private double getHitRatio() {
+  private double getHitRatio() { // 懂
     return (double) hits / (double) requests;
   }
 
