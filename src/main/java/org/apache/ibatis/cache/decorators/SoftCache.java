@@ -29,9 +29,9 @@ import org.apache.ibatis.cache.Cache;
  *
  * @author Clinton Begin
  */
-public class SoftCache implements Cache {
-  private final Deque<Object> hardLinksToAvoidGarbageCollection;
-  private final ReferenceQueue<Object> queueOfGarbageCollectedEntries;
+public class SoftCache implements Cache { // 内存空间不足的话软引用就会被回收
+  private final Deque<Object> hardLinksToAvoidGarbageCollection; // 为了避免GC
+  private final ReferenceQueue<Object> queueOfGarbageCollectedEntries; // 
   private final Cache delegate;
   private int numberOfHardLinks;
 
@@ -49,7 +49,7 @@ public class SoftCache implements Cache {
 
   @Override
   public int getSize() {
-    removeGarbageCollectedItems();
+    removeGarbageCollectedItems(); // 删掉所有已被回收的缓存项
     return delegate.getSize();
   }
 
@@ -60,23 +60,23 @@ public class SoftCache implements Cache {
 
   @Override
   public void putObject(Object key, Object value) {
-    removeGarbageCollectedItems();
-    delegate.putObject(key, new SoftEntry(key, value, queueOfGarbageCollectedEntries));
+    removeGarbageCollectedItems(); // 删掉所有已被回收的缓存项
+    delegate.putObject(key, new SoftEntry(key, value, queueOfGarbageCollectedEntries)); // 加入的value是软引用的<k,v, queue>
   }
-
-  @Override
-  public Object getObject(Object key) {
+  // 笑断：假设不做这个列表，a函数和b函数，都从缓存里拿o，a用完了就不管了，这个时候o又变成软引用，随时可能被回收
+  @Override // b函数过来拿，结果o没了，又重新创建，这个缓存就比较弱
+  public Object getObject(Object key) { //hama
     Object result = null;
     @SuppressWarnings("unchecked") // assumed delegate cache is totally managed by this cache
     SoftReference<Object> softReference = (SoftReference<Object>) delegate.getObject(key);
-    if (softReference != null) {
-      result = softReference.get();
+    if (softReference != null) { // 检查是否已被回收
+      result = softReference.get(); // get之前被回收的话，result也是null
       if (result == null) {
         delegate.removeObject(key);
-      } else {
-        // See #586 (and #335) modifications need more than a read lock 
-        synchronized (hardLinksToAvoidGarbageCollection) {
-          hardLinksToAvoidGarbageCollection.addFirst(result);
+      } else { // result非null，已经是个强引用了
+        // See #586 (and #335) modifications need more than a read lock // hama
+        synchronized (hardLinksToAvoidGarbageCollection) { // 保证list的线程安全
+          hardLinksToAvoidGarbageCollection.addFirst(result); // 加入list防止被回收 hama
           if (hardLinksToAvoidGarbageCollection.size() > numberOfHardLinks) {
             hardLinksToAvoidGarbageCollection.removeLast();
           }
@@ -88,13 +88,13 @@ public class SoftCache implements Cache {
 
   @Override
   public Object removeObject(Object key) {
-    removeGarbageCollectedItems();
+    removeGarbageCollectedItems(); // 删掉所有已被回收的缓存项
     return delegate.removeObject(key);
   }
 
   @Override
   public void clear() {
-    synchronized (hardLinksToAvoidGarbageCollection) {
+    synchronized (hardLinksToAvoidGarbageCollection) { // 线程安全
       hardLinksToAvoidGarbageCollection.clear();
     }
     removeGarbageCollectedItems();
@@ -106,9 +106,9 @@ public class SoftCache implements Cache {
     return null;
   }
 
-  private void removeGarbageCollectedItems() {
+  private void removeGarbageCollectedItems() { // 弹出queueOfGarbageCollectedEntries的每一项，并删掉所有已被回收的缓存项
     SoftEntry sv;
-    while ((sv = (SoftEntry) queueOfGarbageCollectedEntries.poll()) != null) {
+    while ((sv = (SoftEntry) queueOfGarbageCollectedEntries.poll()) != null) { 
       delegate.removeObject(sv.key);
     }
   }
@@ -117,7 +117,7 @@ public class SoftCache implements Cache {
     private final Object key;
 
     SoftEntry(Object key, Object value, ReferenceQueue<Object> garbageCollectionQueue) {
-      super(value, garbageCollectionQueue);
+      super(value, garbageCollectionQueue); // 创建软引用，并把value注册到garbageCollectionQueue
       this.key = key;
     }
   }
