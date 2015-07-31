@@ -26,8 +26,8 @@ import org.apache.ibatis.reflection.SystemMetaObject;
 
 /**
  * @author Clinton Begin
- */
-public class UnpooledDataSourceFactory implements DataSourceFactory {
+ */ // hama
+public class UnpooledDataSourceFactory implements DataSourceFactory { // 为啥是Factory，明明每次都要new出来，且只有一个数据源
 
   private static final String DRIVER_PROPERTY_PREFIX = "driver.";
   private static final int DRIVER_PROPERTY_PREFIX_LENGTH = DRIVER_PROPERTY_PREFIX.length();
