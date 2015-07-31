@@ -32,7 +32,7 @@ import org.apache.ibatis.io.Resources;
 /**
  * @author Clinton Begin
  */
-public class SerializedCache implements Cache {
+public class SerializedCache implements Cache { // 把Cache缓存项序列化了的装饰类
 
   private Cache delegate;
 
@@ -53,7 +53,7 @@ public class SerializedCache implements Cache {
   @Override
   public void putObject(Object key, Object object) {
     if (object == null || object instanceof Serializable) {
-      delegate.putObject(key, serialize((Serializable) object));
+      delegate.putObject(key, serialize((Serializable) object)); // <key, serialize((Serializable) object)>
     } else {
       throw new CacheException("SharedCache failed to make a copy of a non-serializable object: " + object);
     }
@@ -62,7 +62,7 @@ public class SerializedCache implements Cache {
   @Override
   public Object getObject(Object key) {
     Object object = delegate.getObject(key);
-    return object == null ? null : deserialize((byte[]) object);
+    return object == null ? null : deserialize((byte[]) object); // 反序列化
   }
 
   @Override
@@ -90,7 +90,7 @@ public class SerializedCache implements Cache {
     return delegate.equals(obj);
   }
 
-  private byte[] serialize(Serializable value) {
+  private byte[] serialize(Serializable value) { // 序列化
     try {
       ByteArrayOutputStream bos = new ByteArrayOutputStream();
       ObjectOutputStream oos = new ObjectOutputStream(bos);
@@ -103,7 +103,7 @@ public class SerializedCache implements Cache {
     }
   }
 
-  private Serializable deserialize(byte[] value) {
+  private Serializable deserialize(byte[] value) { // 反序列化
     Serializable result;
     try {
       ByteArrayInputStream bis = new ByteArrayInputStream(value);
@@ -116,7 +116,7 @@ public class SerializedCache implements Cache {
     return result;
   }
 
-  public static class CustomObjectInputStream extends ObjectInputStream {
+  public static class CustomObjectInputStream extends ObjectInputStream { // hama
 
     public CustomObjectInputStream(InputStream in) throws IOException {
       super(in);
