@@ -17,3 +17,4 @@
  * Hyper-simple Datasource.
  */
 package org.apache.ibatis.datasource.unpooled;
+// Already new an issue on UnpooledDataSourceFactory
