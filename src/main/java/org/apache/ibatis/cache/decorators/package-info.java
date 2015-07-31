@@ -17,3 +17,4 @@
  * Contains cache decorators
  */
 package org.apache.ibatis.cache.decorators;
+// TransactionalCache还没搞懂
