@@ -26,7 +26,7 @@ import org.apache.ibatis.reflection.SystemMetaObject;
 
 /**
  * @author Clinton Begin
- */ // hama
+ */ // 只能返回一个实例的工厂，原因见这个解释 https://github.com/mybatis/mybatis-3/issues/450
 public class UnpooledDataSourceFactory implements DataSourceFactory { // 为啥是Factory，明明每次都要new出来，且只有一个数据源
 
   private static final String DRIVER_PROPERTY_PREFIX = "driver.";
