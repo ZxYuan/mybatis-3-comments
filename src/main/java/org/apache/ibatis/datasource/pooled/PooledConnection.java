@@ -26,15 +26,15 @@ import org.apache.ibatis.reflection.ExceptionUtil;
 /**
  * @author Clinton Begin
  */
-class PooledConnection implements InvocationHandler {
+class PooledConnection implements InvocationHandler { // connection的封装；想要实现的是conn关闭时放回pool
 
   private static final String CLOSE = "close";
   private static final Class<?>[] IFACES = new Class<?>[] { Connection.class };
 
   private int hashCode = 0;
-  private PooledDataSource dataSource;
-  private Connection realConnection;
-  private Connection proxyConnection;
+  private PooledDataSource dataSource; // connection从哪个数据源而来
+  private Connection realConnection; // 真connection连接
+  private Connection proxyConnection; // 代理connection
   private long checkoutTimestamp;
   private long createdTimestamp;
   private long lastUsedTimestamp;
@@ -55,7 +55,7 @@ class PooledConnection implements InvocationHandler {
     this.lastUsedTimestamp = System.currentTimeMillis();
     this.valid = true;
     this.proxyConnection = (Connection) Proxy.newProxyInstance(Connection.class.getClassLoader(), IFACES, this);
-  }
+  } // proxyConnection对象由动态代理产生
 
   /*
    * Invalidates the connection
@@ -105,7 +105,7 @@ class PooledConnection implements InvocationHandler {
    *
    * @return The connection type
    */
-  public int getConnectionTypeCode() {
+  public int getConnectionTypeCode() { // code 基于url + user + password
     return connectionTypeCode;
   }
 
@@ -229,20 +229,20 @@ class PooledConnection implements InvocationHandler {
    * @param args   - the parameters to be passed to the method
    * @see java.lang.reflect.InvocationHandler#invoke(Object, java.lang.reflect.Method, Object[])
    */
-  @Override
+  @Override // 动态代理了Connection.close方法
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     String methodName = method.getName();
-    if (CLOSE.hashCode() == methodName.hashCode() && CLOSE.equals(methodName)) {
-      dataSource.pushConnection(this);
+    if (CLOSE.hashCode() == methodName.hashCode() && CLOSE.equals(methodName)) { // 若调用close方法
+      dataSource.pushConnection(this); // close时，将连接放入数据源连接池中
       return null;
-    } else {
+    } else { // 非close方法则直接调用
       try {
         if (!Object.class.equals(method.getDeclaringClass())) {
           // issue #579 toString() should never fail
           // throw an SQLException instead of a Runtime
           checkConnection();
         }
-        return method.invoke(realConnection, args);
+        return method.invoke(realConnection, args); // 反射调用方法
       } catch (Throwable t) {
         throw ExceptionUtil.unwrapThrowable(t);
       }
