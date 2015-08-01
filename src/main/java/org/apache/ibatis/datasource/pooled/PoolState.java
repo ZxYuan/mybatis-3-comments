@@ -21,20 +21,20 @@ import java.util.List;
 /**
  * @author Clinton Begin
  */
-public class PoolState {
+public class PoolState { // 保存了空闲连接和活动连接
 
-  protected PooledDataSource dataSource;
+  protected PooledDataSource dataSource; // 数据源
 
-  protected final List<PooledConnection> idleConnections = new ArrayList<PooledConnection>();
-  protected final List<PooledConnection> activeConnections = new ArrayList<PooledConnection>();
-  protected long requestCount = 0;
-  protected long accumulatedRequestTime = 0;
-  protected long accumulatedCheckoutTime = 0;
-  protected long claimedOverdueConnectionCount = 0;
-  protected long accumulatedCheckoutTimeOfOverdueConnections = 0;
-  protected long accumulatedWaitTime = 0;
-  protected long hadToWaitCount = 0;
-  protected long badConnectionCount = 0;
+  protected final List<PooledConnection> idleConnections = new ArrayList<PooledConnection>(); // 空闲连接
+  protected final List<PooledConnection> activeConnections = new ArrayList<PooledConnection>(); // 活动连接
+  protected long requestCount = 0; // 请求计数
+  protected long accumulatedRequestTime = 0; // 累计请求时间
+  protected long accumulatedCheckoutTime = 0; // hama
+  protected long claimedOverdueConnectionCount = 0; // 过期连接计数
+  protected long accumulatedCheckoutTimeOfOverdueConnections = 0; // 过期连接的累计checkouTime
+  protected long accumulatedWaitTime = 0; // 累计等待时间
+  protected long hadToWaitCount = 0; // 等待连接的请求数
+  protected long badConnectionCount = 0; // 无效链接数
 
   public PoolState(PooledDataSource dataSource) {
     this.dataSource = dataSource;
