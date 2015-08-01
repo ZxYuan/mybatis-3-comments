@@ -29,7 +29,7 @@ import org.apache.ibatis.datasource.DataSourceFactory;
 /**
  * @author Clinton Begin
  */
-public class JndiDataSourceFactory implements DataSourceFactory {
+public class JndiDataSourceFactory implements DataSourceFactory { // JNDI数据源工厂
 
   public static final String INITIAL_CONTEXT = "initial_context";
   public static final String DATA_SOURCE = "data_source";
@@ -50,10 +50,10 @@ public class JndiDataSourceFactory implements DataSourceFactory {
 
       if (properties.containsKey(INITIAL_CONTEXT)
           && properties.containsKey(DATA_SOURCE)) {
-        Context ctx = (Context) initCtx.lookup(properties.getProperty(INITIAL_CONTEXT));
-        dataSource = (DataSource) ctx.lookup(properties.getProperty(DATA_SOURCE));
+        Context ctx = (Context) initCtx.lookup(properties.getProperty(INITIAL_CONTEXT)); //获取JNDI上下文
+        dataSource = (DataSource) ctx.lookup(properties.getProperty(DATA_SOURCE)); // 从上下文找到数据源
       } else if (properties.containsKey(DATA_SOURCE)) {
-        dataSource = (DataSource) initCtx.lookup(properties.getProperty(DATA_SOURCE));
+        dataSource = (DataSource) initCtx.lookup(properties.getProperty(DATA_SOURCE)); // 从上下文找到数据源
       }
 
     } catch (NamingException e) {
