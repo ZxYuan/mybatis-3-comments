@@ -86,15 +86,15 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
   public Configuration getConfiguration() {
     return configuration;
   }
-
+  // 通过数据源创建session
   private SqlSession openSessionFromDataSource(ExecutorType execType, TransactionIsolationLevel level, boolean autoCommit) {
     Transaction tx = null;
     try {
       final Environment environment = configuration.getEnvironment();
       final TransactionFactory transactionFactory = getTransactionFactoryFromEnvironment(environment);
-      tx = transactionFactory.newTransaction(environment.getDataSource(), level, autoCommit);
-      final Executor executor = configuration.newExecutor(tx, execType);
-      return new DefaultSqlSession(configuration, executor, autoCommit);
+      tx = transactionFactory.newTransaction(environment.getDataSource(), level, autoCommit); // 创建事务
+      final Executor executor = configuration.newExecutor(tx, execType); // 创建Executor
+      return new DefaultSqlSession(configuration, executor, autoCommit); // 创建sqlSession并返回
     } catch (Exception e) {
       closeTransaction(tx); // may have fetched a connection so lets call close()
       throw ExceptionFactory.wrapException("Error opening session.  Cause: " + e, e);
@@ -102,7 +102,7 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
       ErrorContext.instance().reset();
     }
   }
-
+  // 通过Connection创建session
   private SqlSession openSessionFromConnection(ExecutorType execType, Connection connection) {
     try {
       boolean autoCommit;
