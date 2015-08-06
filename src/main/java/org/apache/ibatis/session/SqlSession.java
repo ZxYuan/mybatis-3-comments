@@ -29,7 +29,7 @@ import org.apache.ibatis.executor.BatchResult;
  *
  * @author Clinton Begin
  */
-public interface SqlSession extends Closeable {
+public interface SqlSession extends Closeable { // SqlSession接口
 
   /**
    * Retrieve a single row mapped from the statement key
@@ -37,7 +37,7 @@ public interface SqlSession extends Closeable {
    * @param statement
    * @return Mapped object
    */
-  <T> T selectOne(String statement);
+  <T> T selectOne(String statement); // 选一行
 
   /**
    * Retrieve a single row mapped from the statement key and parameter.
@@ -46,7 +46,7 @@ public interface SqlSession extends Closeable {
    * @param parameter A parameter object to pass to the statement.
    * @return Mapped object
    */
-  <T> T selectOne(String statement, Object parameter);
+  <T> T selectOne(String statement, Object parameter); // 根据parameter选一行
 
   /**
    * Retrieve a list of mapped objects from the statement key and parameter.
@@ -54,7 +54,7 @@ public interface SqlSession extends Closeable {
    * @param statement Unique identifier matching the statement to use.
    * @return List of mapped object
    */
-  <E> List<E> selectList(String statement);
+  <E> List<E> selectList(String statement); // 选一个list，select * from
 
   /**
    * Retrieve a list of mapped objects from the statement key and parameter.
@@ -87,7 +87,7 @@ public interface SqlSession extends Closeable {
    * @param mapKey The property to use as key for each value in the list.
    * @return Map containing key pair data.
    */
-  <K, V> Map<K, V> selectMap(String statement, String mapKey);
+  <K, V> Map<K, V> selectMap(String statement, String mapKey); // 返回一个map
 
   /**
    * The selectMap is a special case in that it is designed to convert a list
@@ -122,7 +122,7 @@ public interface SqlSession extends Closeable {
    * @param statement Unique identifier matching the statement to use.
    * @return Cursor of mapped objects
    */
-  <T> Cursor<T> selectCursor(String statement);
+  <T> Cursor<T> selectCursor(String statement); // 返回查询结果的cursor
 
   /**
    * A Cursor offers the same results as a List, except it fetches data lazily using an Iterator.
@@ -224,13 +224,13 @@ public interface SqlSession extends Closeable {
    * Note that database connection will not be committed if no updates/deletes/inserts were called.
    * To force the commit call {@link SqlSession#commit(boolean)}
    */
-  void commit();
+  void commit(); // 提交，只查询的话并不会提交
 
   /**
    * Flushes batch statements and commits database connection.
    * @param force forces connection commit
    */
-  void commit(boolean force);
+  void commit(boolean force); // 可设置强制提交
 
   /**
    * Discards pending batch statements and rolls database connection back.
@@ -251,24 +251,24 @@ public interface SqlSession extends Closeable {
    * @return BatchResult list of updated records
    * @since 3.0.6
    */
-  List<BatchResult> flushStatements();
+  List<BatchResult> flushStatements(); // hama
 
   /**
    * Closes the session
    */
   @Override
-  void close();
+  void close(); // 关闭session
 
   /**
    * Clears local session cache
    */
-  void clearCache();
+  void clearCache(); // 清理session cache缓存
 
   /**
    * Retrieves current configuration
    * @return Configuration
    */
-  Configuration getConfiguration();
+  Configuration getConfiguration(); // 获得Configuration对象
 
   /**
    * Retrieves a mapper.
@@ -276,11 +276,11 @@ public interface SqlSession extends Closeable {
    * @param type Mapper interface class
    * @return a mapper bound to this SqlSession
    */
-  <T> T getMapper(Class<T> type);
+  <T> T getMapper(Class<T> type); // hama
 
   /**
    * Retrieves inner database connection
    * @return Connection
    */
-  Connection getConnection();
+  Connection getConnection(); // 获得 jdbc连接
 }
