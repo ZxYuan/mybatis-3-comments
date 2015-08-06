@@ -27,7 +27,7 @@ import org.apache.ibatis.session.TransactionIsolationLevel;
  *
  * @author Clinton Begin
  */
-public interface TransactionFactory {
+public interface TransactionFactory { // 事务的工厂
 
   /**
    * Sets transaction factory custom properties.
@@ -41,7 +41,7 @@ public interface TransactionFactory {
    * @return Transaction
    * @since 3.1.0
    */
-  Transaction newTransaction(Connection conn);
+  Transaction newTransaction(Connection conn); // 返回一个新事务
   
   /**
    * Creates a {@link Transaction} out of a datasource.
@@ -51,6 +51,6 @@ public interface TransactionFactory {
    * @return Transaction
    * @since 3.1.0
    */
-  Transaction newTransaction(DataSource dataSource, TransactionIsolationLevel level, boolean autoCommit);
+  Transaction newTransaction(DataSource dataSource, TransactionIsolationLevel level, boolean autoCommit); // 返回一个新事务
 
 }
