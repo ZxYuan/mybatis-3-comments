@@ -31,7 +31,7 @@ import org.apache.ibatis.session.Configuration;
 /**
  * @author Clinton Begin
  */
-public final class MappedStatement {
+public final class MappedStatement { // 表示XML文件中一个sql语句节点，即一个<select />、<update />或者<insert />标签，待读
 
   private String resource;
   private Configuration configuration;
