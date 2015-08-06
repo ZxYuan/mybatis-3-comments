@@ -24,31 +24,31 @@ import java.sql.SQLException;
  *
  * @author Clinton Begin
  */
-public interface Transaction {
+public interface Transaction { // 事务，管理JDBC的Connection对象来完成事务管理
 
   /**
    * Retrieve inner database connection
    * @return DataBase connection
    * @throws SQLException
    */
-  Connection getConnection() throws SQLException;
+  Connection getConnection() throws SQLException; // 返回JDBC的Connection对象
 
   /**
    * Commit inner database connection.
    * @throws SQLException
    */
-  void commit() throws SQLException;
+  void commit() throws SQLException; // 提交
 
   /**
    * Rollback inner database connection.
    * @throws SQLException
    */
-  void rollback() throws SQLException;
+  void rollback() throws SQLException; // 回滚
 
   /**
    * Close inner database connection.
    * @throws SQLException
    */
-  void close() throws SQLException;
+  void close() throws SQLException; // 关闭Connection
 
 }
