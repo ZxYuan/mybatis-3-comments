@@ -47,20 +47,20 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
 /**
  * @author Clinton Begin
  */
-public abstract class BaseExecutor implements Executor {
+public abstract class BaseExecutor implements Executor { // 各种executor的基类
 
   private static final Log log = LogFactory.getLog(BaseExecutor.class);
 
-  protected Transaction transaction;
-  protected Executor wrapper;
+  protected Transaction transaction; // 事务
+  protected Executor wrapper; // hama
 
-  protected ConcurrentLinkedQueue<DeferredLoad> deferredLoads;
-  protected PerpetualCache localCache;
-  protected PerpetualCache localOutputParameterCache;
-  protected Configuration configuration;
+  protected ConcurrentLinkedQueue<DeferredLoad> deferredLoads; // 并发队列，存啥？ hama
+  protected PerpetualCache localCache; // 本地缓存 hama
+  protected PerpetualCache localOutputParameterCache; // 这是啥缓存 hama
+  protected Configuration configuration; // mybatis的配置
 
-  protected int queryStack = 0;
-  private boolean closed;
+  protected int queryStack = 0; // hama
+  private boolean closed; // hama
 
   protected BaseExecutor(Configuration configuration, Transaction transaction) {
     this.transaction = transaction;
@@ -69,11 +69,11 @@ public abstract class BaseExecutor implements Executor {
     this.localOutputParameterCache = new PerpetualCache("LocalOutputParameterCache");
     this.closed = false;
     this.configuration = configuration;
-    this.wrapper = this;
+    this.wrapper = this; // 奇怪，指向自己 hama
   }
 
   @Override
-  public Transaction getTransaction() {
+  public Transaction getTransaction() { // 获得事务
     if (closed) {
       throw new ExecutorException("Executor was closed.");
     }
@@ -81,13 +81,13 @@ public abstract class BaseExecutor implements Executor {
   }
 
   @Override
-  public void close(boolean forceRollback) {
+  public void close(boolean forceRollback) { // 关闭
     try {
       try {
-        rollback(forceRollback);
+        rollback(forceRollback); // 先回滚
       } finally {
         if (transaction != null) {
-          transaction.close();
+          transaction.close(); // 回滚无论怎样最后都要关闭事务
         }
       }
     } catch (SQLException e) {
@@ -98,7 +98,7 @@ public abstract class BaseExecutor implements Executor {
       deferredLoads = null;
       localCache = null;
       localOutputParameterCache = null;
-      closed = true;
+      closed = true; // 看来是用来标记executor是否打开的
     }
   }
 
@@ -109,12 +109,12 @@ public abstract class BaseExecutor implements Executor {
 
   @Override
   public int update(MappedStatement ms, Object parameter) throws SQLException {
-    ErrorContext.instance().resource(ms.getResource()).activity("executing an update").object(ms.getId());
+    ErrorContext.instance().resource(ms.getResource()).activity("executing an update").object(ms.getId()); // hama
     if (closed) {
       throw new ExecutorException("Executor was closed.");
     }
-    clearLocalCache();
-    return doUpdate(ms, parameter);
+    clearLocalCache(); // 清空本地缓存 hama
+    return doUpdate(ms, parameter); // 做更新
   }
 
   @Override
@@ -126,18 +126,18 @@ public abstract class BaseExecutor implements Executor {
     if (closed) {
       throw new ExecutorException("Executor was closed.");
     }
-    return doFlushStatements(isRollBack);
+    return doFlushStatements(isRollBack); // 不知道是干啥的 hama
   }
 
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler) throws SQLException {
-    BoundSql boundSql = ms.getBoundSql(parameter);
-    CacheKey key = createCacheKey(ms, parameter, rowBounds, boundSql);
-    return query(ms, parameter, rowBounds, resultHandler, key, boundSql);
+    BoundSql boundSql = ms.getBoundSql(parameter); // 获得处理后的实际sql
+    CacheKey key = createCacheKey(ms, parameter, rowBounds, boundSql); // 创建一个缓存键值对的键
+    return query(ms, parameter, rowBounds, resultHandler, key, boundSql); // 查询
  }
 
   @SuppressWarnings("unchecked")
-  @Override
+  @Override // 参数{ms:xml的一个sql语句节点, parameter:参数, rowBounds:LIMIT, resultHandler:结果处理器, key:缓存key, boundSql}
   public <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql) throws SQLException {
     ErrorContext.instance().resource(ms.getResource()).activity("executing a query").object(ms.getId());
     if (closed) {
@@ -306,23 +306,23 @@ public abstract class BaseExecutor implements Executor {
       }
     }
   }
-
+  // 从数据库查询
   private <E> List<E> queryFromDatabase(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql) throws SQLException {
     List<E> list;
-    localCache.putObject(key, EXECUTION_PLACEHOLDER);
+    localCache.putObject(key, EXECUTION_PLACEHOLDER); // 这句的意义？ hama
     try {
-      list = doQuery(ms, parameter, rowBounds, resultHandler, boundSql);
+      list = doQuery(ms, parameter, rowBounds, resultHandler, boundSql); // 真查询
     } finally {
       localCache.removeObject(key);
     }
-    localCache.putObject(key, list);
-    if (ms.getStatementType() == StatementType.CALLABLE) {
+    localCache.putObject(key, list); // 加入缓存
+    if (ms.getStatementType() == StatementType.CALLABLE) { // hama
       localOutputParameterCache.putObject(key, parameter);
     }
     return list;
   }
 
-  protected Connection getConnection(Log statementLog) throws SQLException {
+  protected Connection getConnection(Log statementLog) throws SQLException { // 获得连接
     Connection connection = transaction.getConnection();
     if (statementLog.isDebugEnabled()) {
       return ConnectionLogger.newInstance(connection, statementLog, queryStack);
