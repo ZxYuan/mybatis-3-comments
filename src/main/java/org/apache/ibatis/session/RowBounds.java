@@ -18,7 +18,7 @@ package org.apache.ibatis.session;
 /**
  * @author Clinton Begin
  */
-public class RowBounds {
+public class RowBounds { // 表示sql语句的limit；select * from table LIMIT 5,10; #返回第6-15行数据 5是offest, 10是limit
 
   public static final int NO_ROW_OFFSET = 0;
   public static final int NO_ROW_LIMIT = Integer.MAX_VALUE;
