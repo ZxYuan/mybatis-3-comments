@@ -36,14 +36,14 @@ import org.apache.ibatis.transaction.Transaction;
 /**
  * @author Clinton Begin
  */
-public class ManagedTransaction implements Transaction {
+public class ManagedTransaction implements Transaction { // 忽略提交和回滚，交给容器去做事务管理
 
   private static final Log log = LogFactory.getLog(ManagedTransaction.class);
 
-  private DataSource dataSource;
-  private TransactionIsolationLevel level;
-  private Connection connection;
-  private boolean closeConnection;
+  private DataSource dataSource; // 数据源
+  private TransactionIsolationLevel level; // 事务隔离级别
+  private Connection connection; // JDBC连接
+  private boolean closeConnection; // 关闭事务时是否关闭连接
 
   public ManagedTransaction(Connection connection, boolean closeConnection) {
     this.connection = connection;
@@ -59,7 +59,7 @@ public class ManagedTransaction implements Transaction {
   @Override
   public Connection getConnection() throws SQLException {
     if (this.connection == null) {
-      openConnection();
+      openConnection(); // 从数据源拿一个连接
     }
     return this.connection;
   }
@@ -88,7 +88,7 @@ public class ManagedTransaction implements Transaction {
     if (log.isDebugEnabled()) {
       log.debug("Opening JDBC Connection");
     }
-    this.connection = this.dataSource.getConnection();
+    this.connection = this.dataSource.getConnection(); // 从数据源拿连接
     if (this.level != null) {
       this.connection.setTransactionIsolation(this.level.getLevel());
     }
