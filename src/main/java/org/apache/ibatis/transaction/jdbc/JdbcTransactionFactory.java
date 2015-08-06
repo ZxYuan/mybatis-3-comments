@@ -32,7 +32,7 @@ import org.apache.ibatis.transaction.TransactionFactory;
 /**
  * @author Clinton Begin
  */
-public class JdbcTransactionFactory implements TransactionFactory {
+public class JdbcTransactionFactory implements TransactionFactory { // JDBCTransaction工厂
 
   @Override
   public void setProperties(Properties props) {
@@ -40,7 +40,7 @@ public class JdbcTransactionFactory implements TransactionFactory {
 
   @Override
   public Transaction newTransaction(Connection conn) {
-    return new JdbcTransaction(conn);
+    return new JdbcTransaction(conn); // 返回一个新JDBC事务
   }
 
   @Override
