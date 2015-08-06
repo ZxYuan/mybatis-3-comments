@@ -37,7 +37,7 @@ import org.apache.ibatis.transaction.TransactionException;
 /**
  * @author Clinton Begin
  */
-public class JdbcTransaction implements Transaction {
+public class JdbcTransaction implements Transaction { // JDBC事务
 
   private static final Log log = LogFactory.getLog(JdbcTransaction.class);
 
@@ -47,55 +47,55 @@ public class JdbcTransaction implements Transaction {
   protected boolean autoCommmit;
 
   public JdbcTransaction(DataSource ds, TransactionIsolationLevel desiredLevel, boolean desiredAutoCommit) {
-    dataSource = ds;
-    level = desiredLevel;
-    autoCommmit = desiredAutoCommit;
+    dataSource = ds; // 数据源
+    level = desiredLevel; // 事务隔离级别
+    autoCommmit = desiredAutoCommit; // 是否自动提交
   }
 
   public JdbcTransaction(Connection connection) {
-    this.connection = connection;
+    this.connection = connection; // 设置JDBC连接
   }
 
   @Override
-  public Connection getConnection() throws SQLException {
+  public Connection getConnection() throws SQLException { // 获取Connection
     if (connection == null) {
-      openConnection();
+      openConnection(); // 从数据源拿一个Connection
     }
     return connection;
   }
 
   @Override
-  public void commit() throws SQLException {
-    if (connection != null && !connection.getAutoCommit()) {
+  public void commit() throws SQLException { // 提交事务
+    if (connection != null && !connection.getAutoCommit()) { // 连接存在 且 非自动提交
       if (log.isDebugEnabled()) {
         log.debug("Committing JDBC Connection [" + connection + "]");
       }
-      connection.commit();
+      connection.commit(); // JDBC连接做commit
     }
   }
 
   @Override
-  public void rollback() throws SQLException {
-    if (connection != null && !connection.getAutoCommit()) {
+  public void rollback() throws SQLException { // 回滚事务
+    if (connection != null && !connection.getAutoCommit()) { // 连接存在 且 非自动提交
       if (log.isDebugEnabled()) {
         log.debug("Rolling back JDBC Connection [" + connection + "]");
       }
-      connection.rollback();
+      connection.rollback(); // JDBC连接做回滚
     }
   }
 
   @Override
-  public void close() throws SQLException {
+  public void close() throws SQLException { // 关闭事务
     if (connection != null) {
-      resetAutoCommit();
+      resetAutoCommit(); // hama
       if (log.isDebugEnabled()) {
         log.debug("Closing JDBC Connection [" + connection + "]");
       }
-      connection.close();
+      connection.close(); // 关闭连接
     }
   }
 
-  protected void setDesiredAutoCommit(boolean desiredAutoCommit) {
+  protected void setDesiredAutoCommit(boolean desiredAutoCommit) { // 设置是否自动提交
     try {
       if (connection.getAutoCommit() != desiredAutoCommit) {
         if (log.isDebugEnabled()) {
@@ -112,9 +112,9 @@ public class JdbcTransaction implements Transaction {
     }
   }
 
-  protected void resetAutoCommit() {
+  protected void resetAutoCommit() { // hama
     try {
-      if (!connection.getAutoCommit()) {
+      if (!connection.getAutoCommit()) { // 非自动提交
         // MyBatis does not call commit/rollback on a connection if just selects were performed.
         // Some databases start transactions with select statements
         // and they mandate a commit/rollback before closing the connection.
@@ -123,7 +123,7 @@ public class JdbcTransaction implements Transaction {
         if (log.isDebugEnabled()) {
           log.debug("Resetting autocommit to true on JDBC Connection [" + connection + "]");
         }
-        connection.setAutoCommit(true);
+        connection.setAutoCommit(true); // 设置为自动提交
       }
     } catch (SQLException e) {
       if (log.isDebugEnabled()) {
@@ -133,15 +133,15 @@ public class JdbcTransaction implements Transaction {
     }
   }
 
-  protected void openConnection() throws SQLException {
+  protected void openConnection() throws SQLException { // 开一个新的Connection
     if (log.isDebugEnabled()) {
       log.debug("Opening JDBC Connection");
     }
-    connection = dataSource.getConnection();
+    connection = dataSource.getConnection(); // 从数据源获取一个Connection
     if (level != null) {
-      connection.setTransactionIsolation(level.getLevel());
+      connection.setTransactionIsolation(level.getLevel()); // 设置隔离级别
     }
-    setDesiredAutoCommit(autoCommmit);
+    setDesiredAutoCommit(autoCommmit); // 设置是否自动提交
   }
 
 }
