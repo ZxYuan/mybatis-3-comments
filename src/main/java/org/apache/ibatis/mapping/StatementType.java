@@ -18,6 +18,6 @@ package org.apache.ibatis.mapping;
 /**
  * @author Clinton Begin
  */
-public enum StatementType {
-  STATEMENT, PREPARED, CALLABLE // statement，preparedstatement，callablestatement
+public enum StatementType { // statement，preparedstatement，callablestatement
+  STATEMENT, PREPARED, CALLABLE 
 }
