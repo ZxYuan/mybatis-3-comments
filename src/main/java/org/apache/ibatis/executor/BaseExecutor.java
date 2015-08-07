@@ -54,8 +54,8 @@ public abstract class BaseExecutor implements Executor { // 各种executor的基
   protected Transaction transaction; // 事务
   protected Executor wrapper; // hama
 
-  protected ConcurrentLinkedQueue<DeferredLoad> deferredLoads; // 并发队列，存啥？ hama
-  protected PerpetualCache localCache; // 本地缓存 hama
+  protected ConcurrentLinkedQueue<DeferredLoad> deferredLoads; // 并发队列，延迟加载，存啥？ hama
+  protected PerpetualCache localCache; // 本地缓存，就是一级缓存
   protected PerpetualCache localOutputParameterCache; // 这是啥缓存 hama
   protected Configuration configuration; // mybatis的配置
 
@@ -113,7 +113,7 @@ public abstract class BaseExecutor implements Executor { // 各种executor的基
     if (closed) {
       throw new ExecutorException("Executor was closed.");
     }
-    clearLocalCache(); // 清空本地缓存 hama
+    clearLocalCache(); // 清空本地缓存，update操作会reset缓存
     return doUpdate(ms, parameter); // 做更新
   }
 
@@ -149,11 +149,11 @@ public abstract class BaseExecutor implements Executor { // 各种executor的基
     List<E> list;
     try {
       queryStack++;
-      list = resultHandler == null ? (List<E>) localCache.getObject(key) : null;
+      list = resultHandler == null ? (List<E>) localCache.getObject(key) : null; // 尝试从一级缓存拿数据
       if (list != null) {
         handleLocallyCachedOutputParameters(ms, key, parameter, boundSql);
       } else {
-        list = queryFromDatabase(ms, parameter, rowBounds, resultHandler, key, boundSql);
+        list = queryFromDatabase(ms, parameter, rowBounds, resultHandler, key, boundSql); // 一级缓存未命中，从数据库查询
       }
     } finally {
       queryStack--;
@@ -191,22 +191,22 @@ public abstract class BaseExecutor implements Executor { // 各种executor的基
     }
   }
 
-  @Override
+  @Override // 创建一级缓存的key
   public CacheKey createCacheKey(MappedStatement ms, Object parameterObject, RowBounds rowBounds, BoundSql boundSql) {
     if (closed) {
       throw new ExecutorException("Executor was closed.");
     }
     CacheKey cacheKey = new CacheKey();
-    cacheKey.update(ms.getId());
-    cacheKey.update(Integer.valueOf(rowBounds.getOffset()));
-    cacheKey.update(Integer.valueOf(rowBounds.getLimit()));
-    cacheKey.update(boundSql.getSql());
-    List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
+    cacheKey.update(ms.getId()); // 为key的生成加入statementId这个特征
+    cacheKey.update(Integer.valueOf(rowBounds.getOffset())); // 加入LIMIT offset的特征
+    cacheKey.update(Integer.valueOf(rowBounds.getLimit())); // 加入LIMIT limit的特征
+    cacheKey.update(boundSql.getSql()); // 加入sql语句的特征
+    List<ParameterMapping> parameterMappings = boundSql.getParameterMappings(); // 拿参数列表
     TypeHandlerRegistry typeHandlerRegistry = ms.getConfiguration().getTypeHandlerRegistry();
     // mimic DefaultParameterHandler logic
     for (int i = 0; i < parameterMappings.size(); i++) {
       ParameterMapping parameterMapping = parameterMappings.get(i);
-      if (parameterMapping.getMode() != ParameterMode.OUT) {
+      if (parameterMapping.getMode() != ParameterMode.OUT) { // hama
         Object value;
         String propertyName = parameterMapping.getProperty();
         if (boundSql.hasAdditionalParameter(propertyName)) {
@@ -219,10 +219,10 @@ public abstract class BaseExecutor implements Executor { // 各种executor的基
           MetaObject metaObject = configuration.newMetaObject(parameterObject);
           value = metaObject.getValue(propertyName);
         }
-        cacheKey.update(value);
+        cacheKey.update(value); // 加入每一个参数值的特征
       }
     }
-    if (configuration.getEnvironment() != null) {
+    if (configuration.getEnvironment() != null) { // hama
       // issue #176
       cacheKey.update(configuration.getEnvironment().getId());
     }
@@ -230,41 +230,41 @@ public abstract class BaseExecutor implements Executor { // 各种executor的基
   }
 
   @Override
-  public boolean isCached(MappedStatement ms, CacheKey key) {
+  public boolean isCached(MappedStatement ms, CacheKey key) { // 缓存是否命中
     return localCache.getObject(key) != null;
   }
 
   @Override
-  public void commit(boolean required) throws SQLException {
+  public void commit(boolean required) throws SQLException { // 事务提交
     if (closed) {
       throw new ExecutorException("Cannot commit, transaction is already closed");
     }
-    clearLocalCache();
-    flushStatements();
-    if (required) {
-      transaction.commit();
+    clearLocalCache(); // 清空缓存
+    flushStatements(); // hama
+    if (required) { // hama
+      transaction.commit(); // 交给transaction做提交
     }
   }
 
   @Override
-  public void rollback(boolean required) throws SQLException {
+  public void rollback(boolean required) throws SQLException { // 事务回滚
     if (!closed) {
       try {
-        clearLocalCache();
-        flushStatements(true);
+        clearLocalCache(); // 清空缓存
+        flushStatements(true); // hama
       } finally {
-        if (required) {
-          transaction.rollback();
+        if (required) { // hama
+          transaction.rollback(); // 交给transaction做回滚
         }
       }
     }
   }
 
   @Override
-  public void clearLocalCache() {
+  public void clearLocalCache() { // 清空缓存
     if (!closed) {
       localCache.clear();
-      localOutputParameterCache.clear();
+      localOutputParameterCache.clear(); // 这是存啥的
     }
   }
 
@@ -280,7 +280,7 @@ public abstract class BaseExecutor implements Executor { // 各种executor的基
   protected abstract <E> Cursor<E> doQueryCursor(MappedStatement ms, Object parameter, RowBounds rowBounds, BoundSql boundSql)
       throws SQLException;
 
-  protected void closeStatement(Statement statement) {
+  protected void closeStatement(Statement statement) { // 关闭statement，干啥用的，被子类用么 hama
     if (statement != null) {
       try {
         statement.close();
@@ -289,18 +289,18 @@ public abstract class BaseExecutor implements Executor { // 各种executor的基
       }
     }
   }
-
+  // 缓存命中时，处理缓存的output参数
   private void handleLocallyCachedOutputParameters(MappedStatement ms, CacheKey key, Object parameter, BoundSql boundSql) {
-    if (ms.getStatementType() == StatementType.CALLABLE) {
-      final Object cachedParameter = localOutputParameterCache.getObject(key);
+    if (ms.getStatementType() == StatementType.CALLABLE) { // 若是CallableStatement
+      final Object cachedParameter = localOutputParameterCache.getObject(key); // 从localOutputParameterCache缓存拿到参数
       if (cachedParameter != null && parameter != null) {
         final MetaObject metaCachedParameter = configuration.newMetaObject(cachedParameter);
         final MetaObject metaParameter = configuration.newMetaObject(parameter);
         for (ParameterMapping parameterMapping : boundSql.getParameterMappings()) {
-          if (parameterMapping.getMode() != ParameterMode.IN) {
+          if (parameterMapping.getMode() != ParameterMode.IN) { // 若参数不是IN，即是OUT或INOUT，即是给存储过程用的
             final String parameterName = parameterMapping.getProperty();
             final Object cachedValue = metaCachedParameter.getValue(parameterName);
-            metaParameter.setValue(parameterName, cachedValue);
+            metaParameter.setValue(parameterName, cachedValue); // 这是在干啥 hama
           }
         }
       }
@@ -316,8 +316,8 @@ public abstract class BaseExecutor implements Executor { // 各种executor的基
       localCache.removeObject(key);
     }
     localCache.putObject(key, list); // 加入缓存
-    if (ms.getStatementType() == StatementType.CALLABLE) { // hama
-      localOutputParameterCache.putObject(key, parameter);
+    if (ms.getStatementType() == StatementType.CALLABLE) { // 若是CallableStatement
+      localOutputParameterCache.putObject(key, parameter); // 把参数作为value加入localOutputParameterCache缓存 hama
     }
     return list;
   }
@@ -336,7 +336,7 @@ public abstract class BaseExecutor implements Executor { // 各种executor的基
     this.wrapper = wrapper;
   }
   
-  private static class DeferredLoad {
+  private static class DeferredLoad { // hama
 
     private final MetaObject resultObject;
     private final String property;
