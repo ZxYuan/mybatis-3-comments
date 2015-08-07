@@ -23,14 +23,14 @@ import java.net.URL;
  *
  * @author Clinton Begin
  */
-public class ClassLoaderWrapper {
+public class ClassLoaderWrapper { // 真正的文件加载操作
 
   ClassLoader defaultClassLoader;
   ClassLoader systemClassLoader;
 
   ClassLoaderWrapper() {
     try {
-      systemClassLoader = ClassLoader.getSystemClassLoader();
+      systemClassLoader = ClassLoader.getSystemClassLoader(); // 获得系统类加载器
     } catch (SecurityException ignored) {
       // AccessControlException on Google App Engine   
     }
@@ -175,7 +175,7 @@ public class ClassLoaderWrapper {
    * @return the class
    * @throws ClassNotFoundException - Remember the wisdom of Judge Smails: Well, the world needs ditch diggers, too.
    */
-  Class<?> classForName(String name, ClassLoader[] classLoader) throws ClassNotFoundException {
+  Class<?> classForName(String name, ClassLoader[] classLoader) throws ClassNotFoundException { // 尝试加载name类
 
     for (ClassLoader cl : classLoader) {
 
@@ -183,7 +183,7 @@ public class ClassLoaderWrapper {
 
         try {
 
-          Class<?> c = Class.forName(name, true, cl);
+          Class<?> c = Class.forName(name, true, cl); // 尝试用cl类加载器加载name类
 
           if (null != c) {
             return c;
@@ -203,11 +203,11 @@ public class ClassLoaderWrapper {
 
   ClassLoader[] getClassLoaders(ClassLoader classLoader) {
     return new ClassLoader[]{
-        classLoader,
-        defaultClassLoader,
-        Thread.currentThread().getContextClassLoader(),
-        getClass().getClassLoader(),
-        systemClassLoader};
+        classLoader, // 指定类加载器
+        defaultClassLoader, // 默认类加载器
+        Thread.currentThread().getContextClassLoader(), // 当前线程的上下文的类加载器
+        getClass().getClassLoader(), // 当前类的类加载器
+        systemClassLoader}; // 系统类加载器
   }
 
 }
