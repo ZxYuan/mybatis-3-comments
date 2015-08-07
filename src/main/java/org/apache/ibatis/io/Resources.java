@@ -30,15 +30,15 @@ import java.util.Properties;
  *
  * @author Clinton Begin
  */
-public class Resources {
+public class Resources { // 所有文件的读取都要通过Resources类来完成
 
-  private static ClassLoaderWrapper classLoaderWrapper = new ClassLoaderWrapper();
+  private static ClassLoaderWrapper classLoaderWrapper = new ClassLoaderWrapper(); // 看起来像是用来加载类的 hama
 
   /*
    * Charset to use when calling getResourceAsReader.
    * null means use the system default.
    */
-  private static Charset charset;
+  private static Charset charset; // 调用getResourceAsReader时使用的字符编码
 
   Resources() {
   }
@@ -49,7 +49,7 @@ public class Resources {
    * @return The default classloader
    */
   public static ClassLoader getDefaultClassLoader() {
-    return classLoaderWrapper.defaultClassLoader;
+    return classLoaderWrapper.defaultClassLoader; // 返回默认类加载器
   }
 
   /*
@@ -82,7 +82,7 @@ public class Resources {
    * @throws java.io.IOException If the resource cannot be found or read
    */
   public static URL getResourceURL(ClassLoader loader, String resource) throws IOException {
-    URL url = classLoaderWrapper.getResourceAsURL(resource, loader);
+    URL url = classLoaderWrapper.getResourceAsURL(resource, loader); // 获得url
     if (url == null) {
       throw new IOException("Could not find resource " + resource);
     }
@@ -109,7 +109,7 @@ public class Resources {
    * @throws java.io.IOException If the resource cannot be found or read
    */
   public static InputStream getResourceAsStream(ClassLoader loader, String resource) throws IOException {
-    InputStream in = classLoaderWrapper.getResourceAsStream(resource, loader);
+    InputStream in = classLoaderWrapper.getResourceAsStream(resource, loader); // 获得流
     if (in == null) {
       throw new IOException("Could not find resource " + resource);
     }
