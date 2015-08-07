@@ -17,7 +17,7 @@ package org.apache.ibatis.mapping;
 
 /**
  * @author Clinton Begin
- */
-public enum ParameterMode {
+ */ // IN: preparedStatement的参数，或callableStatement存储过程的IN参数; OUT:callableStatement的OUT参数；INOUT:callableStatement的INOUT参数
+public enum ParameterMode { 
   IN, OUT, INOUT
 }
